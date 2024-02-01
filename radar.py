@@ -101,7 +101,6 @@ def get_value_fonbet(x):
             bd0.append(z[0].strip())
             bd0.append(z[1].strip())
         bd0.append(ci['team1'])
-        print(bd0)
         bd0.append(ci['team2'])
         bd0.append(ci['startTime'])
         if ci['name'] != f'{ci["team1"]} – {ci["team2"]}':
@@ -320,6 +319,8 @@ def get_line_live_pos(line_live):
         for ci in lst:
             bdpos2 = bdpos1.copy()
             game = ci.get('class')[1].split('_')[0]
+            if game == 'hot':
+                game = ci.get('class')[2].split('_')[0]
             if game not in filterposbk:
                 continue
             bdpos2.append(filterposbk[game])
@@ -391,10 +392,11 @@ def cloudbet_live():
 start = time.time()
 fon_line = get_value_fonbet(fonbet_line())
 fon_live = get_value_fonbet(fonbet_live())
-# tf_line = get_value_tf(get_live_line_tf('line'))
-# tf_live = get_value_tf(get_live_line_tf('live'))
-# tf_next = get_value_tf(get_live_line_tf('next'))
-# tf_next_next = get_value_tf(get_live_line_tf('next_next'))
-print(*fon_line(),sep='\n')
+tf_line = get_value_tf(get_live_line_tf('line'))
+tf_live = get_value_tf(get_live_line_tf('live'))
+tf_next = get_value_tf(get_live_line_tf('next'))
+tf_next_next = get_value_tf(get_live_line_tf('next_next'))
+pos_line = get_line_live_pos('line')
+pos_live = get_line_live_pos('live')
 stop = time.time()
 print(stop - start)

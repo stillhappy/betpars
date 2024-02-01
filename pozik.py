@@ -61,6 +61,9 @@ def get_line_live_pos(line_live):
         for ci in lst:
             bdpos2 = bdpos1.copy()
             game = ci.get('class')[1].split('_')[0]
+            if game == 'hot':
+                game = ci.get('class')[2].split('_')[0]
+
             if game not in filterposbk:
                 continue
             bdpos2.append(filterposbk[game])
@@ -77,6 +80,7 @@ def get_line_live_pos(line_live):
             a1 = a.find_all(class_='koef')
             b1 = b.find_all(class_='koef')
             if not a1:
+                print(event_id)
                 continue
             x = a1[0].previous_sibling.text.strip()
             for ci, cj in zip(a1, b1):
