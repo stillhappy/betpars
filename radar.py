@@ -4,6 +4,9 @@ import lxml
 from datetime import datetime as dt
 from datetime import timedelta as td
 import time
+import psycopg2
+from config import host, user, password, db_name
+
 
 filfon = ['Наименьшее количество смертей в раунде', 'Итоги турнира', 'Наименьшее количество смертей в раунде', 'Наибольший ADR', 'Карта с наибольшим % побед за T',
           'Карта с наибольшим % побед за CT', 'Наибольший % убийств в голову', 'Команда с наибольшим количеством убийств на карте', 'Команда с наибольшим количеством сыгранных карт', 'Карта с наибольшим % побед за T (атакующая сторона)',
@@ -417,7 +420,7 @@ def get_line_cloud(epoch, current_time, live):
                 bdcs2 = bdcs1.copy()
                 bdcs2.append(i['home']['name'])
                 bdcs2.append(i['away']['name'])
-                bdcs2.append((dt.strptime(i['cutoffTime'], "%Y-%m-%dT%H:%M:%SZ") + td(hours=3)).strftime("%d.%m %H:%M"))
+                bdcs2.append((dt.strptime(i['cutoffTime'], "%Y-%m-%dT%H:%M:%SZ") + td(hours=3)).strftime("%d.%m.%Y %H:%M:%S"))
                 for j in i['markets']:
                     x = i['markets'][j]
                     if j.split('.')[1] == 'correct_score_in_maps':
@@ -452,6 +455,7 @@ def get_line_cloud(epoch, current_time, live):
                                     bdcs3.append([x['submarkets'][itm]['selections'][li]['price']])
                                 else:
                                     bdcs3[-1].append(x['submarkets'][itm]['selections'][li]['price'])
+                                    bdcs3.append(current_time)
                                     bdcs.append(bdcs3)
                     elif j.split('.')[1] == 'map_total_rounds':
                         for itm in x['submarkets']:
@@ -463,6 +467,7 @@ def get_line_cloud(epoch, current_time, live):
                                     bdcs3.append([x['submarkets'][itm]['selections'][li]['price']])
                                 else:
                                     bdcs3[-1].append(x['submarkets'][itm]['selections'][li]['price'])
+                                    bdcs3.append(current_time)
                                     bdcs.append(bdcs3)
 
     return bdcs
@@ -471,8 +476,9 @@ def get_line_cloud(epoch, current_time, live):
 
 
 
+
 start = time.time()
-fon_line = get_value_fonbet(fonbet_line())
+# fon_line = get_value_fonbet(fonbet_line())
 # fon_live = get_value_fonbet(fonbet_live())
 # tf_line = get_value_tf(get_live_line_tf('line'))
 # tf_live = get_value_tf(get_live_line_tf('live'))
@@ -487,7 +493,7 @@ stop = time.time()
 # print(*tf_live, sep='\n')
 # print(*pos_live, sep='\n')
 # print(*cloud_live, sep='\n')
-print(*fon_line,sep='\n')
+# print(*fon_line,sep='\n')
 # print(*tf_line, sep='\n')
 # print(*tf_next, sep='\n')
 # print(*tf_next_next, sep='\n')
