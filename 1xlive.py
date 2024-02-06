@@ -3,7 +3,7 @@ from _datetime import datetime
 
 
 bet_list_final = []
-def get_final_line(event_result_final):
+def get_final_live(event_result_final):
     global bet_list_final
     game_name = {'CS 2': 'Counter-Strike','League of Legends': 'Lol'}
     now = datetime.now()
@@ -15,9 +15,9 @@ def get_final_line(event_result_final):
             sg_value = i.get('SG')
             if sg_value is not None and len(sg_value) > 0:
                 bet_list = []
-                bet_list.append('line')
+                bet_list.append('live')
                 bet_list.append('1x')
-                game_check = i['SSN']
+                game_check = i['L'].split('.')[0]
                 if game_check in game_name:
                     game_check = game_name[game_check]
                 bet_list.append(game_check)
@@ -154,7 +154,7 @@ def get_final_line(event_result_final):
                         bet_list_final.append(bet_total)
     return bet_list_final
 
-def get_1x_line_value(event_result):
+def get_1x_live_value(event_result):
     event_result_final = []
     session = requests.Session()
 
@@ -166,23 +166,21 @@ def get_1x_line_value(event_result):
                 'sports': '40',
                 'champs': champs,
                 'count': '50',
-                'tf': '2200000',
-                'tz': '3',
+                'gr': '44',
                 'antisports': '188',
                 'mode': '4',
                 'subGames': game_id,
                 'country': '1',
                 'partner': '51',
                 'getEmpty': 'true',
-                'gr': '44',
             }
 
-            response = session.get('https://1xstavka.ru/LineFeed/Get1x2_VZip', params=params)
+            response = requests.get('https://1xstavka.ru/LiveFeed/Get1x2_VZip', params=params)
             event_result_final.append(response.json())
-    bet_list_final = get_final_line(event_result_final)
+    bet_list_final = get_final_live(event_result_final)
     return bet_list_final
 
-def get_1x_line(champ):
+def get_1x_live(champ):
     event_result = []
     session = requests.Session()
     for i in champ:
@@ -190,46 +188,42 @@ def get_1x_line(champ):
             'sports': '40',
             'champs': i,
             'count': '50',
-            'tf': '2200000',
-            'tz': '3',
+            'gr': '44',
             'antisports': '188',
             'mode': '4',
-            'subGames': '505563290',
+            'subGames': '506672024',
             'country': '1',
             'partner': '51',
             'getEmpty': 'true',
-            'gr': '44',
         }
 
-        response = session.get('https://1xstavka.ru/LineFeed/Get1x2_VZip', params=params)
+        response = requests.get('https://1xstavka.ru/LiveFeed/Get1x2_VZip', params=params)
         event_result.append(response.json())
 
 
-    bet_list_final = get_1x_line_value(event_result)
+    bet_list_final = get_1x_live_value(event_result)
     return bet_list_final
 
 def main():
     session = requests.Session()
     params = {
         'sport': '40',
-        'tf': '2200000',
-        'tz': '3',
+        'gr': '44',
         'country': '1',
         'partner': '51',
         'virtualSports': 'true',
-        'gr': '44',
     }
 
-    response = session.get('https://1xstavka.ru/LineFeed/GetChampsZip', params=params)
+    response = requests.get('https://1xstavka.ru/LiveFeed/GetChampsZip', params=params)
 
     champ_id = []
     for ci in response.json()['Value']:
         if 'League of Legends' == ci['SSN'] or 'Dota 2' == ci['SSN'] or 'CS 2' == ci['SSN'] or 'Valorant' == ci['SSN']:
             champ_id.append(ci['LI'])
 
-    bet_list_final = get_1x_line(champ_id)
+    bet_list_final = get_1x_live(champ_id)
 
-    print(*bet_list_final, sep = '\n')
+    print(*bet_list_final,sep = '\n')
 
 
 
