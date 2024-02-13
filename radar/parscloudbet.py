@@ -2,13 +2,15 @@ import requests
 import time
 from datetime import datetime as dt
 from datetime import timedelta as td
+from filtertour import filterteam
 
 now = dt.now()
 current_time = now.strftime("%d.%m.%Y %H:%M:%S")
 pattern = '%d.%m.%Y %H:%M:%S'
 epoch = int(time.mktime((time.strptime(current_time, pattern))))
-current_time = now.strftime("%H:%M")
+current_time = now.strftime('%Y-%m-%d %H:%M')
 
+# запрос к игре клаудбет
 def get_game_cloud(game, epoch, live=False):
     if live:
         url = f'https://sports-api.cloudbet.com/pub/v2/odds/events?sport={game}&live=true&limit=10000'
@@ -20,6 +22,7 @@ def get_game_cloud(game, epoch, live=False):
     }
     return requests.request('GET', url, headers=headers).json()
 
+# сбор даннных с клаудбет
 def get_line_cloud(epoch, current_time, live):
     games = {'counter-strike': 'Counter-Strike', 'dota-2': 'Dota 2', 'league-of-legends': 'LoL', 'esport-valorant': 'Valorant'}
     bdcs = []
@@ -29,12 +32,18 @@ def get_line_cloud(epoch, current_time, live):
         for k in response_game['competitions']:
             if k['name'] == 'The International':
                 continue
-            bdcs1 = ['line', 'Cloudbet', games[ci], k['name']]
+            if live:
+                bdcs1 = ['live', 'Cloudbet', games[ci], k['name']]
+            else:
+                bdcs1 = ['line', 'Cloudbet', games[ci], k['name']]
             for i in k['events']:
                 bdcs2 = bdcs1.copy()
-                bdcs2.append(i['home']['name'])
-                bdcs2.append(i['away']['name'])
-                bdcs2.append((dt.strptime(i['cutoffTime'], "%Y-%m-%dT%H:%M:%SZ") + td(hours=3)).strftime("%d.%m %H:%M"))
+                global filterteam
+                team1 = i['home']['name'].rstrip().lower().title().replace('Club', '').replace('Team', '').replace('Esports', '').replace('Esport', '').replace('E-Sports', '').replace('Gaming', '').replace('  ', ' ').strip()
+                team2 = i['away']['name'].rstrip().lower().title().replace('Club', '').replace('Team', '').replace('Esports', '').replace('Esport', '').replace('E-Sports', '').replace('Gaming', '').replace('  ', ' ').strip()
+                bdcs2.append(filterteam.get(team1, team1))
+                bdcs2.append(filterteam.get(team2, team2))
+                bdcs2.append((dt.strptime(i['cutoffTime'], "%Y-%m-%dT%H:%M:%SZ") + td(hours=3)).strftime("%Y.%m.%d %H:%M"))
                 for j in i['markets']:
                     x = i['markets'][j]
                     if j.split('.')[1] == 'correct_score_in_maps':
@@ -69,6 +78,7 @@ def get_line_cloud(epoch, current_time, live):
                                     bdcs3.append([x['submarkets'][itm]['selections'][li]['price']])
                                 else:
                                     bdcs3[-1].append(x['submarkets'][itm]['selections'][li]['price'])
+                                    bdcs3.append(current_time)
                                     bdcs.append(bdcs3)
                     elif j.split('.')[1] == 'map_total_rounds':
                         for itm in x['submarkets']:
@@ -80,11 +90,14 @@ def get_line_cloud(epoch, current_time, live):
                                     bdcs3.append([x['submarkets'][itm]['selections'][li]['price']])
                                 else:
                                     bdcs3[-1].append(x['submarkets'][itm]['selections'][li]['price'])
+                                    bdcs3.append(current_time)
                                     bdcs.append(bdcs3)
 
     return bdcs
-start = time.time()
-y = get_line_cloud(epoch, current_time, False)
-print(*y,sep='\n')
-stop = time.time()
-print(stop - start)
+
+def cloudbet():
+    y = get_line_cloud(epoch, current_time, False) + get_line_cloud(epoch, current_time, True)
+    return y
+
+if __name__ == "__main__":
+    cloudbet()
