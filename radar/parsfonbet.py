@@ -1,7 +1,7 @@
 import requests
 from datetime import datetime as dt
 from datetime import timedelta as td
-from filtertour import filterteam
+from filtertour import filterteam, filtertourn
 
 # парсер линии фонбета
 def fonbet_line():
@@ -96,24 +96,38 @@ def get_value_fonbet(x):
     bd = []
     now = dt.now()
     current_time = now.strftime('%Y-%m-%d %H:%M')
+    global filtertourn
     for ci in x.json()['events']:
         bd0 = [ci['place'], 'Fonbet']
         if ci['sportName'].split('.')[-1].strip() in filfon:
             continue
         z = ci['sportName'].split('.')[:-1]
         if z[0] == 'Киберспорт':
-            bd0.append(z[1].strip())
-            bd0.append(z[2].strip())
+            try:
+                if z[1].strip() in ['Dota 2', 'LoL', 'Valorant', 'Counter-Strike']:
+                    bd0.append(z[1].strip())
+                    bd0.append(filtertourn.get(z[2].strip(), z[2].strip()))
+                else:
+                    continue
+            except:
+                continue
         else:
             if len(z) < 2:
                 continue
-            bd0.append(z[0].strip())
-            bd0.append(z[1].strip())
+            if z[1].strip() in ['Dota 2', 'LoL', 'Valorant', 'Counter-Strike']:
+                bd0.append(z[0].strip())
+                bd0.append(filtertourn.get(z[1].strip(), z[1].strip()))
+            else:
+                continue
+        if 'Challengers' in bd0[-1] and bd0[-2] == 'Valorant':
+            bd0[-1] = 'Challengers League'
+        if 'Champions' in bd0[-1] and bd0[-2] == 'Valorant':
+            bd0[-1] = 'Champions Tour'
         global filterteam
         if not ci.get('team1') or not ci.get('team2'):
             continue
-        team1 = ci['team1'].rstrip().lower().title().replace('Club', '').replace('Team', '').replace('Esports', '').replace('Esport', '').replace('E-Sports', '').replace('Gaming', '').replace('  ', ' ').strip()
-        team2 = ci['team2'].rstrip().lower().title().replace('Club', '').replace('Team', '').replace('Esports', '').replace('Esport', '').replace('E-Sports', '').replace('Gaming', '').replace('  ', ' ').strip()
+        team1 = ci['team1'].rstrip().lower().title().replace('Club', '').replace('Team', '').replace('Esports', '').replace('Esport', '').replace('E-Sports', '').replace('Gaming', '').replace('  ', ' ').replace('Challengers', '').strip()
+        team2 = ci['team2'].rstrip().lower().title().replace('Club', '').replace('Team', '').replace('Esports', '').replace('Esport', '').replace('E-Sports', '').replace('Gaming', '').replace('  ', ' ').replace('Challengers', '').strip()
         bd0.append(filterteam.get(team1, team1))
         bd0.append(filterteam.get(team2, team2))
         cur_year = dt.now().year
@@ -139,4 +153,4 @@ def fonbet():
     return x
 
 if __name__ == "__main__":
-    fonbet()
+    print(*fonbet(), sep='\n')

@@ -7,34 +7,37 @@ import requests
 import itertools
 from fake_useragent import UserAgent
 from random import choice
+from filtertour import filterteam, filtertourn
 
 
-prox = ['http://45.143.167.92:8000', 'http://138.124.186.18:8000', 'http://193.9.17.244:8000']
+prox = ['http://45.145.160.130:8000', 'http://138.124.186.18:8000', 'http://193.9.17.244:8000']
 
 url = "https://csgopositive.me/lib/bets.php"
 headers = {
-            "cookie": "lang=RU; _ym_uid=1705850604685101510; _ym_d=1705850604; PHPSESSID=1e4d488657b9358298b19e2195aa3f35; fixed_chat=true; minimized_chat=true; _ym_isad=2; cf_clearance=vtr5UkokmAiDT3xoy7olXNNnlCXQ4lGkyPHCVqDx3rg-1706622830-1-ARRx40SmK9utFW4XVOVnOhtoUs/E2mSZg3Ag0BaS/pGI1St2u2XSp+RjzqAP5FNwkYDKTbmHJlHWDGJv43E7l5c=; auth=4d6a41354f475a6b4d6a41324d7a56694e545668596d51304d6a5a6c4d47497a4d7a41334e446c6b4f44633d; auth=4d6a41354f475a6b4d6a41324d7a56694e545668596d51304d6a5a6c4d47497a4d7a41334e446c6b4f44633d",
-            "authority": "csgopositive.me",
-            "accept": "*/*",
-            "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
-            "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-            "origin": "https://csgopositive.me",
-            "referer": "https://csgopositive.me/",
-            "sec-ch-ua": "^\\^Not_A",
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": "^\\^Windows^^",
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "same-origin",
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 OPR/106.0.0.0 (Edition Yx GX 03)",
-            "x-requested-with": "XMLHttpRequest"
-        }
+    "cookie": "lang=RU; _ym_uid=1705850604685101510; _ym_d=1705850604; fixed_chat=true; minimized_chat=true; mobile=true; app_id2=730^|570^|101^|103^|; auth=596a566b4d7a686d5a5755784d6a426d4d4755344f475578597a41305a44426b595449315a5468695a57513d; auth=596a566b4d7a686d5a5755784d6a426d4d4755344f475578597a41305a44426b595449315a5468695a57513d; _ym_isad=2; cf_clearance=kv3iM.wFbQiR7H5_gEhE3yXCCHZAaGDwh_1XjdzcacQ-1708957909-1.0-AZ9bvc1Czq25AZdJpcBxjYHEa5kYfVtdzc7/UR6J3fHH2Ag0tmhvFxF/XzStt9VgEXA9ZcXHrrmDGA7DvOlf62I=; PHPSESSID=f5e4238e20e52a9bd26bbba3ce515d79",
+    "authority": "csgopositive.me",
+    "accept": "*/*",
+    "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
+    "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+    "origin": "https://csgopositive.me",
+    "referer": "https://csgopositive.me/",
+    "sec-ch-ua": "^\\^Not_A",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "^\\^Windows^^",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 OPR/106.0.0.0 (Edition Yx GX 03)",
+    "x-requested-with": "XMLHttpRequest"
+}
+
 
 def get_line_live_pos2(line_live):
     response = requests.get('https://csgopositive.me/')
     response.encoding = 'utf-8'
     bdposid = []
     filterposbk = {'valorant': 'Valorant', 'lol': 'LoL', 'csgo': 'Counter-Strike', 'dota2': 'Dota 2'}
+    global filtertourn
     if response.status_code == 200:
         soup = bs(response.text, 'lxml')
         if line_live == 'line':
@@ -54,11 +57,14 @@ def get_line_live_pos2(line_live):
             if gamex not in filterposbk:
                 continue
             bdpos2.append(filterposbk[gamex])
-            bdpos2.append(ci.find('span', class_='event_name').text)
+            bdpos2.append(filtertourn.get(ci.find('span', class_='event_name').text, ci.find('span', class_='event_name').text))
             if ci.find('span', class_='event_name').text in ['CS2 Positive duo aim ', 'CS2 Positive aim ', 'CS2 Positive duo aim', 'CS2 Positive aim']:
                 continue
-            bdpos2.append(ci.find_all('span', class_='team_name')[0].text.rstrip().lower().title().replace('Club', '').replace('Team', '').replace('Esports', '').replace('Esport', '').replace('E-Sports', '').replace('Gaming', '').replace('  ', ' ').strip())
-            bdpos2.append(ci.find_all('span', class_='team_name')[1].text.rstrip().lower().title().replace('Club', '').replace('Team', '').replace('Esports', '').replace('Esport', '').replace('E-Sports', '').replace('Gaming', '').replace('  ', ' ').strip())
+            global filterteam
+            team1 = ci.find_all('span', class_='team_name')[0].text.rstrip().lower().title().replace('Club', '').replace('Team', '').replace('Esports', '').replace('Esport', '').replace('E-Sports', '').replace('Gaming', '').replace('  ', ' ').strip()
+            team2 = ci.find_all('span', class_='team_name')[1].text.rstrip().lower().title().replace('Club', '').replace('Team', '').replace('Esports', '').replace('Esport', '').replace('E-Sports', '').replace('Gaming', '').replace('  ', ' ').strip()
+            bdpos2.append(filterteam.get(team1, team1))
+            bdpos2.append(filterteam.get(team2, team2))
             data_match = dt.strptime(ci.find(class_='timer').get('data-start'), '%m/%d/%Y %H:%M:%S').strftime(
                 '%Y-%m-%d %H:%M')
             bdpos2.append(data_match)
@@ -96,22 +102,22 @@ def get_line_live_pos22(lst):
             if ci.previous_sibling.text.strip() == x:
                 bdpos1.append(dct[ci.previous_sibling.text.strip()])
                 bdpos1.append('Исходы')
-                bdpos1.append([ci.text, cj.text])
+                bdpos1.append([float(ci.text), float(cj.text)])
                 bdpos1.append(current_time)
             if ci.previous_sibling.text.strip() != x and ci.previous_sibling.text.strip() not in dct and ci.previous_sibling.text.strip() in dct2:
                 if ci.previous_sibling.text.strip() in ['больше 21.5', 'больше 20.5']:
                     bdpos1.append(dct[x])
                     bdpos1.append(dct2[ci.previous_sibling.text.strip()])
-                    bdpos1.append([ci.text])
+                    bdpos1.append([float(ci.text)])
 
                 elif ci.previous_sibling.text.strip() in ['меньше 21.5', 'меньше 20.5']:
-                    bdpos[-1][-1].append(cj.text)
+                    bdpos[-1][-1].append(float(cj.text))
                     bdpos[-1].append(current_time)
                     continue
                 else:
                     bdpos1.append(dct[x])
                     bdpos1.append(dct2[ci.previous_sibling.text.strip()])
-                    bdpos1.append([ci.text, cj.text])
+                    bdpos1.append([float(ci.text), float(cj.text)])
                     bdpos1.append(current_time)
             if len(bdpos1) > 7:
                 bdpos.append(bdpos1)
@@ -128,6 +134,7 @@ async def get_url(payload):
                 await asyncio.sleep(1)
             soup = bs(await resp.text(), 'lxml')
             a = soup.find_all(class_='koef')
+
         async with session.post(url, data=payload[7][1], headers=headers, proxy=proxi) as resp:
             if resp.status == 429:
                 await asyncio.sleep(1)
@@ -145,7 +152,7 @@ async def positive():
         return
     combined_list = list(itertools.chain.from_iterable(results))
     line_pos = get_line_live_pos22(combined_list)
-    print(*line_pos, sep='\n')
+    return line_pos
 
 if __name__ == '__main__':
-    asyncio.run(positive())
+    print(*asyncio.run(positive()), sep='\n')

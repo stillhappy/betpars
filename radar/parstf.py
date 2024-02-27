@@ -8,6 +8,7 @@ import itertools
 from fake_useragent import UserAgent
 from random import choice
 import json
+from filtertour import filterteam, filtertourn
 
 headers = {
         "authority": "api-v4.ely889.com",
@@ -82,6 +83,7 @@ def get_odds(markets):
     bets_dct = {'WINNER': 'Исходы', 'WINNER (MAPS)': 'Исходы',
                 'ROUND HANDICAP (INCL. OVERTIME)': 'Фора', 'TOTAL ROUNDS (INCL. OVERTIME)': 'Тотал', 'TOTAL KILLS OVER/UNDER': 'Тотал', 'TEAM TO DRAW FIRST BLOOD': 'Первая кровь',
                 'RACE TO 10 KILLS': 'Гонка до 10 киллов'}
+    global filtertourn
     for ci in markets:
         bdtf1 = []
         if ci['match_scoreline']:
@@ -93,9 +95,16 @@ def get_odds(markets):
             bdtf1.append(game_dct[ci['game_name']])
         else:
             continue
-        bdtf1.append(ci['competition_name'])
-        bdtf1.append(ci['home']['team_name'])
-        bdtf1.append(ci['away']['team_name'])
+        bdtf1.append(filtertourn.get(ci['competition_name'].rstrip(' Spring').replace('2024 ', '').strip(), ci['competition_name'].rstrip(' Spring').replace('2024 ', '').strip()))
+        if 'Challengers' in bdtf1[-1] and bdtf1[-2] == 'Valorant':
+            bdtf1[-1] = 'Challengers League'
+        if 'Champions' in bdtf1[-1] and bdtf1[-2] == 'Valorant':
+            bdtf1[-1] = 'Champions Tour'
+        global filterteam
+        team1 = ci['home']['team_name'].rstrip().lower().title().replace('Club', '').replace('Team', '').replace('Esports', '').replace('Esport', '').replace('E-Sports', '').replace('Gaming', '').replace('  ', ' ').strip()
+        team2 = ci['away']['team_name'].rstrip().lower().title().replace('Club', '').replace('Team', '').replace('Esports', '').replace('Esport', '').replace('E-Sports', '').replace('Gaming', '').replace('  ', ' ').strip()
+        bdtf1.append(filterteam.get(team1, team1))
+        bdtf1.append(filterteam.get(team2, team2))
         bdtf1.append(dt.strptime(ci['start_datetime'], "%Y-%m-%d %H:%M:%S").strftime('%Y-%m-%d %H:%M'))
         if ci['markets'][0]['market_option'] == 'match':
             bdtf1.append('Общая')
@@ -124,7 +133,7 @@ def get_odds(markets):
     return bdtf
 
 
-async def get_url(payload):
+async def get_urls(payload):
     global url, headers
     event_id = payload[0]
     markets = []
@@ -151,17 +160,14 @@ async def get_url(payload):
     return markets
 
 async def tf():
-    start = time.time()
-    tasks = [get_url(payload) for payload in get_id_markets_tf(get_live_line_tf('line')) + get_id_markets_tf(get_live_line_tf('live'))]
+    tasks = [get_urls(payload) for payload in get_id_markets_tf(get_live_line_tf('line')) + get_id_markets_tf(get_live_line_tf('live'))]
     try:
         results = await asyncio.gather(*tasks)
     except asyncio.CancelledError:
         print("Корутины были отменены до завершения")
         return
     combined_list = list(itertools.chain.from_iterable(results))
-    print(*get_odds(combined_list), sep='\n')
-    stop = time.time()
-    print(stop - start)
+    return get_odds(combined_list)
 
 if __name__ == '__main__':
-    asyncio.run(tf())
+    print(*asyncio.run(tf()),sep='\n')

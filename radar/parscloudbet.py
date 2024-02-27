@@ -2,7 +2,7 @@ import requests
 import time
 from datetime import datetime as dt
 from datetime import timedelta as td
-from filtertour import filterteam
+from filtertour import filterteam, filtertourn
 
 now = dt.now()
 current_time = now.strftime("%d.%m.%Y %H:%M:%S")
@@ -27,20 +27,25 @@ def get_line_cloud(epoch, current_time, live):
     games = {'counter-strike': 'Counter-Strike', 'dota-2': 'Dota 2', 'league-of-legends': 'LoL', 'esport-valorant': 'Valorant'}
     bdcs = []
     dct = {'map1': '1-я карта', 'map2': '2-я карта', 'map3': '3-я карта', 'map4': '4-я карта', 'map5': '5-я карта'}
+    global filtertourn
     for ci in games:
         response_game = get_game_cloud(ci, epoch, live)
         for k in response_game['competitions']:
             if k['name'] == 'The International':
                 continue
             if live:
-                bdcs1 = ['live', 'Cloudbet', games[ci], k['name']]
+                bdcs1 = ['live', 'Cloudbet', games[ci], filtertourn.get(k['name'], k['name'])]
             else:
-                bdcs1 = ['line', 'Cloudbet', games[ci], k['name']]
+                bdcs1 = ['line', 'Cloudbet', games[ci], filtertourn.get(k['name'], k['name'])]
+            if 'Challengers' in bdcs1[-1] and bdcs1[-2] == 'Valorant':
+                bdcs1[-1] = 'Challengers League'
+            if 'Champions' in bdcs1[-1] and bdcs1[-2] == 'Valorant':
+                bdcs1[-1] = 'Champions Tour'
             for i in k['events']:
                 bdcs2 = bdcs1.copy()
                 global filterteam
-                team1 = i['home']['name'].rstrip().lower().title().replace('Club', '').replace('Team', '').replace('Esports', '').replace('Esport', '').replace('E-Sports', '').replace('Gaming', '').replace('  ', ' ').strip()
-                team2 = i['away']['name'].rstrip().lower().title().replace('Club', '').replace('Team', '').replace('Esports', '').replace('Esport', '').replace('E-Sports', '').replace('Gaming', '').replace('  ', ' ').strip()
+                team1 = i['home']['name'].rstrip().lower().title().replace('Club', '').replace('Team', '').replace('Esports', '').replace('Esport', '').replace('E-Sports', '').replace('Gaming', '').replace('  ', ' ').replace('Challengers', '').replace('Chall', '').replace('Acad', 'Academy').strip()
+                team2 = i['away']['name'].rstrip().lower().title().replace('Club', '').replace('Team', '').replace('Esports', '').replace('Esport', '').replace('E-Sports', '').replace('Gaming', '').replace('  ', ' ').replace('Challengers', '').replace('Chall', '').replace('Acad', 'Academy').strip()
                 bdcs2.append(filterteam.get(team1, team1))
                 bdcs2.append(filterteam.get(team2, team2))
                 bdcs2.append((dt.strptime(i['cutoffTime'], "%Y-%m-%dT%H:%M:%SZ") + td(hours=3)).strftime("%Y.%m.%d %H:%M"))
