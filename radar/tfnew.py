@@ -1,4 +1,3 @@
-import requests
 from datetime import datetime as dt
 from datetime import timedelta as td
 import time
@@ -10,70 +9,6 @@ from random import choice
 import json
 from filtertour import filterteam, filtertourn
 import pytz
-
-headers = {
-        "authority": "api-v4.ely889.com",
-        "accept": "application/json, text/plain, */*",
-        "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
-        "authorization": "Token 9278cadf62902610a21cfecfc60b8eeb2c830e93",
-        "origin": "https://gc.ely889.com",
-        "public-token": "b8c712a2f691483381abad76cef9f67d",
-        "referer": "https://gc.ely889.com/",
-        "sec-ch-ua": "^\\^Not_A",
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": "^\\^Windows^^",
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-site",
-        "tf-authorization": "fb58bd9c9802250b4bb8d00acd055dce6a0854422d699ef2b4c281a7baa0bdb818ab7119680b86ebb0f14493efa003ca121a86b9076f2f2ddfab9b9e1ea535d5",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 OPR/106.0.0.0 (Edition Yx GX 03)"
-    }
-url = "https://api-v4.ely889.com/api/v4/events/paginate"
-
-def get_live_line_tf(live_or_line_or_next):
-    global headers
-    global url
-    results = []
-    payload = ""
-    querystring_common = {
-        "combo": "false",
-        "outright": "false",
-        "timing": "today",
-        "sort_by_popular": "false",
-        "market_option": "MATCH",
-        "lang": "en",
-        "timezone": "Europe/Moscow"
-    }
-
-    if live_or_line_or_next == 'live':
-        querystring_common["timing"] = "inplay"
-        results = results + requests.request("GET", url, data=payload, headers=headers, params=querystring_common).json()['results']
-    else:
-        results = results + requests.request("GET", url, data=payload, headers=headers, params=querystring_common).json()['results']
-        next_day = dt.now() + td(days=1)
-        querystring_common["timing"] = "early"
-        querystring_common["date"] = next_day.strftime("%Y-%m-%d")
-        results = results + requests.request("GET", url, data=payload, headers=headers, params=querystring_common).json()['results']
-        next_next_day = dt.now() + td(days=2)
-        querystring_common["date"] = next_next_day.strftime("%Y-%m-%d")
-        results = results + requests.request("GET", url, data=payload, headers=headers, params=querystring_common).json()['results']
-        next_next_day = dt.now() + td(days=3)
-        querystring_common["date"] = next_next_day.strftime("%Y-%m-%d")
-        results = results + requests.request("GET", url, data=payload, headers=headers, params=querystring_common).json()['results']
-
-    return results
-
-
-def get_id_markets_tf(results):
-    id_markets = []
-    for ci in results:
-        x = [ci['event_id']]
-        for k in ci['market_tabs']:
-            if k['open'] > 0:
-                x.append(k['tab_name'])
-        if len(x) > 1:
-            id_markets.append(x)
-    return id_markets
 
 def get_odds(markets):
     now = dt.now()
@@ -137,11 +72,37 @@ def get_odds(markets):
                     continue
     return bdtf
 
+async def get_all_matches(timing, headers, querystring_common, url):
+    proxi = choice(['http://138.124.186.18:8000', 'http://193.9.17.244:8000'])
+    if timing[0] == 'inplay':
+        querystring_common["timing"] = "inplay"
+    elif timing[0] == 'early':
+        querystring_common["timing"] = "early"
+        querystring_common["date"] = timing[1]
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, headers=headers, params=querystring_common, proxy=proxi) as resp:
+            if resp.status == 200 and resp.content_type == 'application/json':
+                match_json = await resp.json()
+            else:
+                return []
+    return match_json['results']
 
-async def get_urls(payload):
-    global url, headers
+def get_id_markets_tf(results):
+    id_markets = []
+    for k in results:
+        for ci in k:
+            x = [ci['event_id']]
+            for k in ci['market_tabs']:
+                if k['open'] > 0:
+                    x.append(k['tab_name'])
+            if len(x) > 1:
+                id_markets.append(x)
+    return id_markets
+
+async def get_urls(payload, url, headers):
     event_id = payload[0]
     markets = []
+    proxi = choice(['http://138.124.186.18:8000', 'http://193.9.17.244:8000'])
     async with aiohttp.ClientSession() as session:
         for ci in payload[1:]:
             if ci != 'MATCH':
@@ -151,21 +112,61 @@ async def get_urls(payload):
                                "sort_by_popular": "false",
                                "map_option": map_option, "market_option": market_option, "lang": "en",
                                "timezone": "Europe/Moscow"}
-                async with session.post(url, headers=headers, params=querystring) as resp:
+                async with session.post(url, headers=headers, params=querystring, proxy=proxi) as resp:
                     if resp.status == 200 and (await resp.json())['results'][0]:
                         markets.append((await resp.json())['results'][0])
+                    else:
+                        return []
             else:
                 market_option = ci.split()[0]
                 querystring = {"event_id": event_id, "combo": "false", "outright": "false",
                                "sort_by_popular": "false", "market_option": market_option, "lang": "en",
                                "timezone": "Europe/Moscow"}
-                async with session.post(url, headers=headers, params=querystring) as resp:
+                async with session.post(url, headers=headers, params=querystring, proxy=proxi) as resp:
                     if resp.status == 200 and (await resp.json())['results'][0]:
                         markets.append((await resp.json())['results'][0])
+                    else:
+                        return []
     return markets
 
 async def tf():
-    tasks = [get_urls(payload) for payload in get_id_markets_tf(get_live_line_tf('line')) + get_id_markets_tf(get_live_line_tf('live'))]
+    querystring_common = {
+        "page_size": 100,
+        "combo": "false",
+        "outright": "false",
+        "timing": "today",
+        "sort_by_popular": "false",
+        "market_option": "MATCH",
+        "lang": "en",
+        "timezone": "Europe/Moscow"
+    }
+    headers = {
+        "authority": "api-v4.ely889.com",
+        "accept": "application/json, text/plain, */*",
+        "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
+        "authorization": "Token 9278cadf62902610a21cfecfc60b8eeb2c830e93",
+        "origin": "https://gc.ely889.com",
+        "public-token": "b8c712a2f691483381abad76cef9f67d",
+        "referer": "https://gc.ely889.com/",
+        "sec-ch-ua": "^\\^Not_A",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "^\\^Windows^^",
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-site",
+        "tf-authorization": "fb58bd9c9802250b4bb8d00acd055dce6a0854422d699ef2b4c281a7baa0bdb818ab7119680b86ebb0f14493efa003ca121a86b9076f2f2ddfab9b9e1ea535d5",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 OPR/106.0.0.0 (Edition Yx GX 03)"
+    }
+    url = "https://api-v4.ely889.com/api/v4/events/paginate"
+    vhod = [('inplay', 'now'), ('today', 'now'), ('early', (dt.now()).strftime("%Y-%m-%d")), ('early', (dt.now() + td(days=1)).strftime("%Y-%m-%d")), ('early', (dt.now() + td(days=2)).strftime("%Y-%m-%d")), ('early', (dt.now() + td(days=3)).strftime("%Y-%m-%d"))]
+    tasks = [get_all_matches(timing, headers, querystring_common, url) for timing in vhod]
+    try:
+        results = await asyncio.gather(*tasks)
+    except asyncio.CancelledError:
+        print("Корутины были отменены до завершения")
+        return
+    payloads = get_id_markets_tf(results)
+    tasks = [get_urls(payload, url, headers) for payload in payloads]
     try:
         results = await asyncio.gather(*tasks)
     except asyncio.CancelledError:
@@ -174,5 +175,7 @@ async def tf():
     combined_list = list(itertools.chain.from_iterable(results))
     return get_odds(combined_list)
 
+
 if __name__ == '__main__':
-    print(*asyncio.run(tf()),sep='\n')
+    print(*asyncio.run(tf()), sep='\n')
+

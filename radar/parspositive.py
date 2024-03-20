@@ -3,12 +3,13 @@ import aiohttp
 from bs4 import BeautifulSoup as bs
 import lxml
 from datetime import datetime as dt
+from datetime import timedelta as td
 import requests
 import itertools
 from fake_useragent import UserAgent
 from random import choice
 from filtertour import filterteam, filtertourn
-
+import pytz
 
 prox = ['http://45.145.160.130:8000', 'http://138.124.186.18:8000', 'http://193.9.17.244:8000']
 
@@ -75,6 +76,10 @@ def get_line_live_pos2(line_live):
 def get_line_live_pos22(lst):
     now = dt.now()
     current_time = now.strftime('%Y-%m-%d %H:%M')
+    date_format = '%Y-%m-%d %H:%M'
+    initial_date = dt.strptime(current_time, date_format)
+    updated_date = initial_date + td(hours=3)
+    current_time = updated_date.strftime(date_format)
     bdpos = []
     dct = {'Победа в матче': 'Общая', 'Победа в серии BO3': 'Общая', 'Победа на карте #1': '1-я карта',
            'Победа на карте #2': '2-я карта', 'Победа на карте #3': '3-я карта', 'Победа на карте #4': '4-я карта',
@@ -156,3 +161,5 @@ async def positive():
 
 if __name__ == '__main__':
     print(*asyncio.run(positive()), sep='\n')
+
+

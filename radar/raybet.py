@@ -1,14 +1,14 @@
-from _datetime import datetime, timedelta
-from filtertour import filterteam, filtertourn
+from datetime import datetime
+from datetime import timedelta
 import asyncio
 import aiohttp
 import itertools
 import json
+from filtertour import filterteam, filtertourn
 from random import choice
 
 def get_coef(game_result):
     bet_list_final = []
-    global filterteam
     game_name = {'DOTA2': 'Dota 2', 'CS2': 'Counter-Strike', '无畏契约': 'Valorant', '英雄联盟': 'LoL'}
     now = datetime.now()
     current_time = now.strftime('%Y-%m-%d %H:%M')
@@ -26,14 +26,14 @@ def get_coef(game_result):
             time = datetime.strptime(item['result']['start_time'], "%Y-%m-%d %H:%M:%S") - timedelta(
                 hours=5, )
             time = time.strftime('%Y-%m-%d %H:%M')
-            if time < current_time:
+            if time > current_time:
 
                 time = datetime.strptime(item['result']['start_time'], "%Y-%m-%d %H:%M:%S") - timedelta(
                     hours=5, )
                 time = time.strftime('%Y-%m-%d %H:%M')
-                if time < current_time:
+                if time > current_time:
                     bet_list = []
-                    bet_list.append('live')
+                    bet_list.append('line')
                     bet_list.append('raybet')
                     game_check = item['result']['game_name']
                     if game_check in game_name:
@@ -170,12 +170,11 @@ def get_coef(game_result):
     return(bet_list_final)
 
 async def get_urls(page):
-    proxi = choice(['http://45.145.160.130:8000', 'http://138.124.186.18:8000', 'http://193.9.17.244:8000'])
     querystring = {"page": page[0], "match_type": page[1]}
+    proxi = choice(['http://45.145.160.130:8000', 'http://138.124.186.18:8000', 'http://193.9.17.244:8000'])
     url = "https://vnimpvgameinfo.esportsworldlink.com/v2/match"
     async with aiohttp.ClientSession() as session:
         try:
-
             async with session.get(url, params=querystring, proxy=proxi) as resp:
                 if resp.status == 200:
                     resjs = await resp.json()
@@ -196,9 +195,9 @@ async def get_json_matches(match_id):
             match_json = await resp.json()
     return [match_json]
 
-async def raybetl():
-    pages = [(1, 1), (2, 1), (3, 1)]
-
+async def raybet():
+    pages = [(1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6, 2), (7, 2), (8, 2), (1, 1), (2, 1), (1, 0), (2, 0), (3, 0), (1, 3), (2, 3), (3, 3), (4, 3), (5, 3), (6, 3),
+             (7, 3), (8, 3)]
     tasks = [get_urls(page) for page in pages]
     try:
         results = await asyncio.gather(*tasks)
@@ -216,5 +215,7 @@ async def raybetl():
     return get_coef(matches_jsons)
 
 
+
+
 if __name__ == '__main__':
-    print(*asyncio.run(raybetl()), sep='\n')
+    print(*asyncio.run(raybet()), sep='\n')

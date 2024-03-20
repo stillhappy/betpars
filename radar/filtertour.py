@@ -3,7 +3,17 @@ filterteam = {'Berlin International': 'Big', 'Elevate^': 'Elevate', 'Barça': 'B
               'Aurora Yb': 'Aurora Young Blud', 'Austrian Force Willhaben': 'Austrian Force', 'Dynasty Ne': 'Dynasty', 'Faze': 'Faze Clan', 'Gng Amazigh': 'Gng',
               'Kabum Academy': 'Kabum! Academy', 'Los Grandes Academy': 'Los Academy', 'Mad Lions': 'Mad Lions Koi', 'Nigma Galaxy Mena': 'Nigma Galaxy',
               'Nip': 'Ninjas In Pyjamas', 'orangegaming': 'Orangegaming', 'West Point Philippines': 'West Point', 'Burning Core Toyama': 'Burning Core',
-              'Breiðablik': 'Breidablik', 'Breioablik': 'Breidablik', 'Aoe': 'Area Of Effect', 'Dplus': 'Dplus Kia', 'Kabum': 'Kabum!'}
+              'Breiðablik': 'Breidablik', 'Breioablik': 'Breidablik', 'Aoe': 'Area Of Effect', 'Dplus': 'Dplus Kia', 'Kabum': 'Kabum!',
+              '100': '100 Thieves', 'Al': 'Al-Qatrao', 'Al Qatrao': 'Al-Qatrao', 'Ano': 'Anorthosis Famagusta', 'Betboom': 'Bb',
+              'C9': 'Cloud9', 'Cfo': 'Ctbc Flying Oyster', 'Cwe': 'Cyber Wolves', 'Czv': 'Crvena Zvezda', 'Dia': 'Diamant',
+              'Dsg': 'Disguised', 'Dfm': 'Detonation Focusme', 'Dig': 'Dignitas', 'Dp': 'Dark Passage', 'Dsyr': 'Dsyre', 'Eko Academyemy': 'Eko Academy',
+              'Esb': 'Esuba', 'Fb': 'Fenerbahce', 'Fur': 'Furia', 'Fly': 'Flyquest', 'Fpx': 'Funplus Phoenix', 'Gal': 'Galakticos',
+              'Gam': 'Gamespace Mce', 'Gsmc': 'Gamespace Mce', 'Hell': 'Hell Pigs', 'imt': 'Immortals', 'Invictus': 'Ig', 'Jdg': 'Jd',
+              'Kbm': 'Kabum!', 'Kyp': 'Keypulse', 'Lbr': 'Liberty', 'Los': 'Los Grandes', 'Los academy': 'Los Grandes Academy', 'Mck': 'Macko',
+              'Nasr Turkey': 'Nasr', 'Nsr': 'Nasr', 'Odivelas Sports': 'Odivelas', 'Par': 'Papara Supermassive', 'Psg': 'Psg Talon',
+              'Ra': "Ra'Ad", 'Red': 'Red Canids', 'Royal': 'Royal Never Give Up', 'Rfs': 'Refuse', 'Sr': 'Supermassive', 'Unit': 'Unity',
+              'Vivo Keyd Stars Academyemy': 'Vivo Keyd Stars Academy', 'Axl': 'Axoloti', 'For The Win': 'Ftw', 'Dk': 'Dplus Kia',
+              'Ender': 'Ender Dragon', 'Gen Ga': 'Gen.G Global Academy', 'Intz.Academy': 'Intz Academy', 'Ns': 'Ns Redforce'}
 
 filtertourn = {'Arabian League Spring': 'Arabian League', 'BetBoom Dacha Dubai': 'BB Dacha', 'Campeonato Brasileiro (CBLoL)': 'Campeonato Brasileiro',
               'Turkish Championship League Winter': 'Turkish Championship League', 'Northern League of Legends Championship Spring': 'Northern LoL Championship',
@@ -18,15 +28,16 @@ filtertourn = {'Arabian League Spring': 'Arabian League', 'BetBoom Dacha Dubai':
 
 """ 
 /////////ЗАПРОС В SQL НА ВСЕ УНИКАЛЬНЫЕ НАЗВАНИЯ КОМАНД + БК
-SELECT team, bk_name
+SELECT team, bk_name, game_name
 FROM (
-    SELECT team1 AS team, bk_name
+    SELECT team1 AS team, bk_name, game_name
     FROM datakofs
     UNION
-    SELECT team2 AS team, bk_name
+    SELECT team2 AS team, bk_name, game_name
     FROM datakofs
 ) AS subquery
 ORDER BY team;
+
 
 /////////ЗАПРОС В SQL НА ИЗМЕНЕНИЕ НАЗВАНИЯ ТУРНИРА ПО ФОНБЕТУ
 UPDATE datakofs

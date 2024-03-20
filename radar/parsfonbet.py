@@ -2,6 +2,7 @@ import requests
 from datetime import datetime as dt
 from datetime import timedelta as td
 from filtertour import filterteam, filtertourn
+import pytz
 
 # парсер линии фонбета
 def fonbet_line():
@@ -96,12 +97,17 @@ def get_value_fonbet(x):
     bd = []
     now = dt.now()
     current_time = now.strftime('%Y-%m-%d %H:%M')
+    date_format = '%Y-%m-%d %H:%M'
+    initial_date = dt.strptime(current_time, date_format)
+    updated_date = initial_date + td(hours=3)
+    current_time = updated_date.strftime(date_format)
     global filtertourn
     for ci in x.json()['events']:
         bd0 = [ci['place'], 'Fonbet']
         if ci['sportName'].split('.')[-1].strip() in filfon:
             continue
         z = ci['sportName'].split('.')[:-1]
+
         if z[0] == 'Киберспорт':
             try:
                 if z[1].strip() in ['Dota 2', 'LoL', 'Valorant', 'Counter-Strike']:
@@ -114,7 +120,7 @@ def get_value_fonbet(x):
         else:
             if len(z) < 2:
                 continue
-            if z[1].strip() in ['Dota 2', 'LoL', 'Valorant', 'Counter-Strike']:
+            if z[0].strip() in ['Dota 2', 'LoL', 'Valorant', 'Counter-Strike']:
                 bd0.append(z[0].strip())
                 bd0.append(filtertourn.get(z[1].strip(), z[1].strip()))
             else:
@@ -123,6 +129,8 @@ def get_value_fonbet(x):
             bd0[-1] = 'Challengers League'
         if 'Champions' in bd0[-1] and bd0[-2] == 'Valorant':
             bd0[-1] = 'Champions Tour'
+        if 'Elite League' in bd0[-1]:
+            bd0[-1] = 'Elite League'
         global filterteam
         if not ci.get('team1') or not ci.get('team2'):
             continue
@@ -154,3 +162,4 @@ def fonbet():
 
 if __name__ == "__main__":
     print(*fonbet(), sep='\n')
+

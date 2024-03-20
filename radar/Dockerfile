@@ -6,6 +6,4 @@ COPY . .
 
 RUN pip install -r requirements.txt
 
-EXPOSE 5000
-
-ENTRYPOINT ["python", "testboks.py"]
+CMD ["python", "sqlcodew.py"]

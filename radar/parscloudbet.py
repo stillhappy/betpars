@@ -1,14 +1,11 @@
 import requests
 import time
+import pytz
 from datetime import datetime as dt
 from datetime import timedelta as td
 from filtertour import filterteam, filtertourn
 
-now = dt.now()
-current_time = now.strftime("%d.%m.%Y %H:%M:%S")
-pattern = '%d.%m.%Y %H:%M:%S'
-epoch = int(time.mktime((time.strptime(current_time, pattern))))
-current_time = now.strftime('%Y-%m-%d %H:%M')
+
 
 # запрос к игре клаудбет
 def get_game_cloud(game, epoch, live=False):
@@ -23,7 +20,16 @@ def get_game_cloud(game, epoch, live=False):
     return requests.request('GET', url, headers=headers).json()
 
 # сбор даннных с клаудбет
-def get_line_cloud(epoch, current_time, live):
+def get_line_cloud(live):
+    now = dt.now()
+    current_time = now.strftime("%d.%m.%Y %H:%M:%S")
+    pattern = '%d.%m.%Y %H:%M:%S'
+    epoch = int(time.mktime((time.strptime(current_time, pattern))))
+    current_time = now.strftime('%Y-%m-%d %H:%M')
+    date_format = '%Y-%m-%d %H:%M'
+    initial_date = dt.strptime(current_time, date_format)
+    updated_date = initial_date + td(hours=3)
+    current_time = updated_date.strftime(date_format)
     games = {'counter-strike': 'Counter-Strike', 'dota-2': 'Dota 2', 'league-of-legends': 'LoL', 'esport-valorant': 'Valorant'}
     bdcs = []
     dct = {'map1': '1-я карта', 'map2': '2-я карта', 'map3': '3-я карта', 'map4': '4-я карта', 'map5': '5-я карта'}
@@ -101,8 +107,8 @@ def get_line_cloud(epoch, current_time, live):
     return bdcs
 
 def cloudbet():
-    y = get_line_cloud(epoch, current_time, False) + get_line_cloud(epoch, current_time, True)
+    y = get_line_cloud(False) + get_line_cloud(True)
     return y
 
 if __name__ == "__main__":
-    cloudbet()
+    print(*cloudbet(),sep='\n')
